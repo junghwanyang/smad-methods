@@ -5,64 +5,103 @@ date: "October 30, 2014"
 output: html_document
 ---
 
-Install dependencies
+This is R Markdown (.Rmd)
+
+## Brief overview to explore Twitter data
+
+This document is a brief overview to explore JSON data from Twitter using R.
+
+### Install dependencies
+
+Before getting started, install required R packeages.
 
 ```{r, echo = F}
+###############################################################################
+# Install dependencies
 ###############################################################################
 library(tm); library(streamR); library(rjson); library(stringr); 
 library(data.table)
 ###-------------------------------------------------------------------------###
 ```
 
-Read data
+### Read JSON file
 
-```{r, echo=FALSE}
+Using the sample dataset I shared on a Box folder, I first read every line (each line represents a tweet) then parse the tweet using parseTweets() function in streamR.
+
+```{r, echo = FALSE}
+###############################################################################
+# Read JSON data
+###############################################################################
 path <- "Data//obamacare 100000.json"
 c <- file(path, "r")
 l <- readLines(c)
 tweet <- parseTweets(l) #streamR
+###-------------------------------------------------------------------------###
 ```
 
-Explore the Twitter objects
+### Explore the Twitter objects
 
-```{r}
-# List of objects
+Using names() or str(), you can check various properties of a Twitter object that parseTweets() generates.
+There are several other properties we can acess manually.
+
+```{r, echo = F}
+###############################################################################
+# Check various information in the data
+###############################################################################
+names(tweet)
 str(tweet)
+###-------------------------------------------------------------------------###
+```
 
+Here are some examples of the information you can access
+
+```{r, echo = F}
 # Language
 tweet$user_lang
-table(tweet$user_lang)
+table(tweet$user_lang) # Mostly English because the data are about Obamacare
 
-# Created time
+# Time zone
 tweet$time_zone
 table(tweet$time_zone)
-length(which(is.na(tweet$time_zone) == F))
+length(which(is.na(tweet$time_zone) == F)) # 88465 out of 100000 has this info
 
 # Retweets
-tweet$retweet_count[1:100]
-tweet$text[36]
-tweet$text[tweet$retweet_count > 1000]
-unique(tweet$text[tweet$retweet_count > 1000])
+tweet$retweet_count[1:100] # Check the RT count of the first 100 tweets
+tweet$text[tweet$retweet_count > 1000] # Check the texts that RTed > 1000 times
+unique(tweet$text[tweet$retweet_count > 1000]) # Show only the unique texts
 
 # User profile
-length(which(is.na(tweet$description) == T))
-names(tweet)
-d.prof <- data.table(unique(c(tweet$name, tweet$description)))
+tweet$description[1:100] # Check the profile of the first 100 tweets
+length(which(is.na(tweet$description) == T)) # Only 641 without this info
+###-------------------------------------------------------------------------###
+```
+
+### Taking a brief look at text mining
+
+Using tm() package, we can find frequently used words
+
+```{r Text mining example, echo = F}
+# Create a data table that only contains username and profile info
+d.prof <- 
+  data.table(unique(c(tweet$name, tweet$description)))
 d.prof
 
-# USE TWEETS AFTER REMOVING HASHTAGS, MENTIONS, RETWEETS, AND LINKS
+# Use tweets after removing hashtags, mentions, RTs, and links
 tweet$word.list <- str_replace_all(tweet$description, "'s", "")
-#tweet$word.list <- str_replace_all(tweet$word.list, "#[a-zA-Z0-9_]+", "")
-#tweet$word.list <- str_replace_all(tweet$word.list, "http[a-zA-Z0-9_.:/]+", "")
+tweet$word.list <- str_replace_all(tweet$word.list, "#[a-zA-Z0-9_]+", "")
+tweet$word.list <- str_replace_all(tweet$word.list, "@[a-zA-Z0-9_.:/]+", "")
+tweet$word.list <- str_replace_all(tweet$word.list, "RT[a-zA-Z0-9_.:/]+", "")
+tweet$word.list <- str_replace_all(tweet$word.list, "http[a-zA-Z0-9_.:/]+", "")
 uniqueWord <- unique(unlist(tweet$word.list))
 wordCorpus <- Corpus(VectorSource(tweet$word.list)) 
 
-# REMOVE STOPWORDS (USING PREDEFINED STOPWORDS DICTIONARY)
-# keep "r" by removing it from stopwords
+# Remove stopwords (Using predefiend stopwords dictionary)
 myStopwords <- c(stopwords('english'))
-#idx <- which(myStopwords == "r") # ADD MORE STOPWORDS IF NEEDED
-myStopwords <- myStopwords[-idx]
 wordCorpus <- tm_map(wordCorpus, removeWords, myStopwords)
+
+# Create a term document matrix
 Dtm <- TermDocumentMatrix(wordCorpus, control = list(minWordLength = 2))
-findFreqTerms(Dtm, lowfreq=100) 
+
+# Find the words that used at least 1000
+findFreqTerms(Dtm, lowfreq=1000) 
 ```
