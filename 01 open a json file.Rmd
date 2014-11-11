@@ -1,0 +1,68 @@
+---
+title: "Open a JSON file"
+author: "JungHwan Yang"
+date: "October 30, 2014"
+output: html_document
+---
+
+Install dependencies
+
+```{r, echo = F}
+###############################################################################
+library(tm); library(streamR); library(rjson); library(stringr); 
+library(data.table)
+###-------------------------------------------------------------------------###
+```
+
+Read data
+
+```{r, echo=FALSE}
+path <- "Data//obamacare 100000.json"
+c <- file(path, "r")
+l <- readLines(c)
+tweet <- parseTweets(l) #streamR
+```
+
+Explore the Twitter objects
+
+```{r}
+# List of objects
+str(tweet)
+
+# Language
+tweet$user_lang
+table(tweet$user_lang)
+
+# Created time
+tweet$time_zone
+table(tweet$time_zone)
+length(which(is.na(tweet$time_zone) == F))
+
+# Retweets
+tweet$retweet_count[1:100]
+tweet$text[36]
+tweet$text[tweet$retweet_count > 1000]
+unique(tweet$text[tweet$retweet_count > 1000])
+
+# User profile
+length(which(is.na(tweet$description) == T))
+names(tweet)
+d.prof <- data.table(unique(c(tweet$name, tweet$description)))
+d.prof
+
+# USE TWEETS AFTER REMOVING HASHTAGS, MENTIONS, RETWEETS, AND LINKS
+tweet$word.list <- str_replace_all(tweet$description, "'s", "")
+#tweet$word.list <- str_replace_all(tweet$word.list, "#[a-zA-Z0-9_]+", "")
+#tweet$word.list <- str_replace_all(tweet$word.list, "http[a-zA-Z0-9_.:/]+", "")
+uniqueWord <- unique(unlist(tweet$word.list))
+wordCorpus <- Corpus(VectorSource(tweet$word.list)) 
+
+# REMOVE STOPWORDS (USING PREDEFINED STOPWORDS DICTIONARY)
+# keep "r" by removing it from stopwords
+myStopwords <- c(stopwords('english'))
+#idx <- which(myStopwords == "r") # ADD MORE STOPWORDS IF NEEDED
+myStopwords <- myStopwords[-idx]
+wordCorpus <- tm_map(wordCorpus, removeWords, myStopwords)
+Dtm <- TermDocumentMatrix(wordCorpus, control = list(minWordLength = 2))
+findFreqTerms(Dtm, lowfreq=100) 
+```
