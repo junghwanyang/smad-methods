@@ -15,7 +15,7 @@ This document is a brief overview to explore JSON data from Twitter using R.
 
 Before getting started, install required R packeages.
 
-```{r, echo = F}
+```{r Install Packages, echo = F}
 ###############################################################################
 # Install dependencies
 ###############################################################################
@@ -28,7 +28,7 @@ library(data.table)
 
 Using the sample dataset I shared on a Box folder, I first read every line (each line represents a tweet) then parse the tweet using parseTweets() function in streamR.
 
-```{r, echo = FALSE}
+```{r Read JSON, echo = FALSE}
 ###############################################################################
 # Read JSON data
 ###############################################################################
@@ -44,7 +44,7 @@ tweet <- parseTweets(l) #streamR
 Using names() or str(), you can check various properties of a Twitter object that parseTweets() generates.
 There are several other properties we can acess manually.
 
-```{r, echo = F}
+```{r List of properties, echo = F}
 ###############################################################################
 # Check various information in the data
 ###############################################################################
@@ -55,7 +55,10 @@ str(tweet)
 
 Here are some examples of the information you can access
 
-```{r, echo = F}
+```{r Look up properties of tweets, echo = F}
+###############################################################################
+# Very brief exploration
+###############################################################################
 # Language
 tweet$user_lang
 table(tweet$user_lang) # Mostly English because the data are about Obamacare
