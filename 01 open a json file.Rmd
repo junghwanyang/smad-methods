@@ -81,6 +81,10 @@ length(which(is.na(tweet$description) == T)) # Only 641 without this info
 Using tm() package, we can find frequently used words
 
 ```{r Text mining example, echo = F}
+###############################################################################
+# Very brief example of text mining
+###############################################################################
+
 # Create a data table that only contains username and profile info
 d.prof <- 
   data.table(unique(c(tweet$name, tweet$description)))
@@ -104,4 +108,5 @@ Dtm <- TermDocumentMatrix(wordCorpus, control = list(minWordLength = 2))
 
 # Find the words that used at least 1000
 findFreqTerms(Dtm, lowfreq=1000) 
+###-------------------------------------------------------------------------###
 ```
