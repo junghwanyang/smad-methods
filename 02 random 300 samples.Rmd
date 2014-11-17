@@ -1,0 +1,22 @@
+---
+title: "Randomly sample 300 tweets"
+author: "JungHwan Yang"
+date: "November 16, 2014"
+output: html_document
+---
+
+```{r}
+set.seed(7)
+random300 <- sample(l, 300)
+
+# Save as json
+write(random300, "random300.json")
+tweets300 <- parseTweets(random300)
+
+# Save as xlsx
+#install.packages("xlsx")
+library(xlsx)
+write.xlsx(tweets300, "parsedRandom300.xlsx", sheetName = "Sheet1",
+           col.names = T, row.names = F, append = F, showNA = T)
+
+```
