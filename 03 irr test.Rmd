@@ -1,0 +1,61 @@
+---
+title: "Test IRR"
+author: "JungHwan Yang"
+date: "December 11, 2014"
+output: html_document
+---
+
+This script is for testing inter-rater reliability (IRR) of the 300 randomly selected tweets about *Obamacare*.
+
+The first 150 tweets were coded by two people.
+The other 150 tweets were coded by three people.
+(on the day of December 11, 2014)
+
+```{r read data}
+path <- "Data//random300-coded.csv"
+d.coded <- read.csv (path)
+```
+
+Since the .csv file contains two different sets of coding for two variables, I make different data frame from the original data.
+
+```{r, echo=FALSE}
+d.first.v1 <- d.coded[2:151, c(3, 8)]
+names(d.first.v1) <- c("v1.kristen", "v1.jinha")
+d.first.v2 <- d.coded[2:151, c(5, 10)]
+names(d.first.v2) <- c("v2.kristen", "v2.jinha")
+d.last.v1 <- d.coded[151:301, c(13, 18, 23)]
+names(d.last.v1) <- c("v1.j", "v1.yini", "v1.rachel")
+d.last.v2 <- d.coded[151:301, c(15, 20, 25)]
+names(d.last.v2) <- c("v2.j", "v2.yini", "v2.rachel")
+```
+
+Test IRR see [This link](http://www.cookbook-r.com/Statistical_analysis/Inter-rater_reliability/)
+
+```{r install "irr" package}
+#install.packages("irr")
+library(irr)
+```
+
+Since it's categorical data for two raters, I calculate Cohen's Kappa for two coders.
+In this case, for the first 150 tweets.
+
+```{r}
+kappa2(d.first.v1, "unweighted")
+kappa2(d.first.v2, "unweighted")
+```
+
+Since it's categorical data for three raters, I calculate Fleiss's Kappa for N coders.
+In this case, for the last 150 tweets.
+
+```{r}
+kappam.fleiss(d.last.v1)
+kappam.fleiss(d.last.v2)
+
+kappa2(d.last.v1[ ,1:2], "unweighted")
+kappa2(d.last.v1[ ,c(1,3)], "unweighted")
+kappa2(d.last.v1[ ,2:3], "unweighted")
+
+kappa2(d.last.v2[ ,1:2], "unweighted")
+kappa2(d.last.v2[ ,c(1,3)], "unweighted")
+kappa2(d.last.v2[ ,2:3], "unweighted")
+```
