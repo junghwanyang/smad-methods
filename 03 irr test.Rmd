@@ -51,11 +51,20 @@ In this case, for the last 150 tweets.
 kappam.fleiss(d.last.v1)
 kappam.fleiss(d.last.v2)
 
-kappa2(d.last.v1[ ,1:2], "unweighted")
-kappa2(d.last.v1[ ,c(1,3)], "unweighted")
-kappa2(d.last.v1[ ,2:3], "unweighted")
+# Testing IRR two out of three coders
+#kappa2(d.last.v1[ ,1:2], "unweighted")
+#kappa2(d.last.v1[ ,c(1,3)], "unweighted")
+#kappa2(d.last.v1[ ,2:3], "unweighted")
+#kappa2(d.last.v2[ ,1:2], "unweighted")
+#kappa2(d.last.v2[ ,c(1,3)], "unweighted")
+#kappa2(d.last.v2[ ,2:3], "unweighted")
+```
 
-kappa2(d.last.v2[ ,1:2], "unweighted")
-kappa2(d.last.v2[ ,c(1,3)], "unweighted")
-kappa2(d.last.v2[ ,2:3], "unweighted")
+Test with Krippendorff's alpha
+
+```{r}
+kripp.alpha(t(as.matrix(d.first.v1[,])), method = "nominal")
+kripp.alpha(t(as.matrix(d.first.v2[,])), method = "nominal")
+kripp.alpha(t(as.matrix(d.last.v1[,])), method = "nominal")
+kripp.alpha(t(as.matrix(d.last.v2[,])), method = "nominal")
 ```
