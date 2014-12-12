@@ -12,7 +12,7 @@ The other 150 tweets were coded by three people.
 (on the day of December 11, 2014)
 
 ```{r read data}
-path <- "Data//random300-coded.csv"
+path <- "data//random300-coded.csv"
 d.coded <- read.csv (path)
 ```
 
@@ -71,4 +71,41 @@ kripp.alpha(t(as.matrix(d.first.v1[,])), method = "nominal")
 kripp.alpha(t(as.matrix(d.first.v2[,])), method = "nominal")
 kripp.alpha(t(as.matrix(d.last.v1[,])), method = "nominal")
 kripp.alpha(t(as.matrix(d.last.v2[,])), method = "nominal")
+```
+
+#### Here, I tried to merge 'unknown (U)' and 'neutral (N)' together
+
+(I could leave out 'unreleveant' tweets and run the same test again.)
+
+```{r recode U and N into U}
+d.recoded <- d.coded
+d.recoded[d.recoded == 'N'] <- 'U'
+```
+
+And repeat the same procedure
+
+```{r, echo=FALSE}
+# Make separate dfs
+d.re.first.v1 <- d.recoded[2:151, c(3, 8)]
+names(d.re.first.v1) <- c("v1.kristen", "v1.jinha")
+d.re.first.v2 <- d.recoded[2:151, c(5, 10)]
+names(d.re.first.v2) <- c("v2.kristen", "v2.jinha")
+d.re.last.v1 <- d.recoded[151:301, c(13, 18, 23)]
+names(d.re.last.v1) <- c("v1.j", "v1.yini", "v1.rachel")
+d.re.last.v2 <- d.recoded[151:301, c(15, 20, 25)]
+names(d.re.last.v2) <- c("v2.j", "v2.yini", "v2.rachel")
+
+# Cohen's kappa
+kappa2(d.re.first.v1, "unweighted")
+kappa2(d.re.first.v2, "unweighted")
+
+# Fleiss's kappa
+kappam.fleiss(d.re.last.v1)
+kappam.fleiss(d.re.last.v2)
+
+# Krippendorff's alpha
+kripp.alpha(t(as.matrix(d.re.first.v1[,])), method = "nominal")
+kripp.alpha(t(as.matrix(d.re.first.v2[,])), method = "nominal")
+kripp.alpha(t(as.matrix(d.re.last.v1[,])), method = "nominal")
+kripp.alpha(t(as.matrix(d.re.last.v2[,])), method = "nominal")
 ```
