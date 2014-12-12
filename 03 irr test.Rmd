@@ -62,6 +62,10 @@ kappam.fleiss(d.last.v2)
 
 Test with Krippendorff's alpha
 
+- This funciton is tricky because:
+    - Need to change a data.frame to a matrix
+    - Need to transpose a matrix: t()
+
 ```{r}
 kripp.alpha(t(as.matrix(d.first.v1[,])), method = "nominal")
 kripp.alpha(t(as.matrix(d.first.v2[,])), method = "nominal")
