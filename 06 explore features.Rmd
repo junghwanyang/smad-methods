@@ -93,22 +93,79 @@ cleanCorpus <- function(corpus) {
 #### After cleaned text, create separate corpus objects
 
 ```{r}
-# 2. Clean text using cleanCorpus()
-
-training_tweet_clean <- cleanCorpus(training$text)
-training_descrip_clean <- cleanCorpus(training$description)
-testing_tweet_clean <- cleanCorpus(testing$text)
-testing_descrip_clean <- cleanCorpus(testing$description)
+###############################################################################
+# 2. Clean text of training set using cleanCorpus()
+## Treat R, L, U separately
+training_tweet_clean_C <-
+  cleanCorpus(training$text[training$User_Ideology=="C"])
+training_tweet_clean_L <-
+  cleanCorpus(training$text[training$User_Ideology=="L"])
+training_tweet_clean_U <-
+  cleanCorpus(training$text[training$User_Ideology=="U"])
+training_desc_clean_C <- 
+  cleanCorpus(training$description[training$User_Ideology=="C"])
+training_desc_clean_L <- 
+  cleanCorpus(training$description[training$User_Ideology=="L"])
+training_desc_clean_U <- 
+  cleanCorpus(training$description[training$User_Ideology=="U"])
 
 
 # 3. Creating a corpus
-training_tweet_corpus <- Corpus(VectorSource(training_tweet_clean))
-training_descrip_corpus <- Corpus(VectorSource(training_descrip_clean))
-testing_tweet_corpus <- Corpus(VectorSource(testing_tweet_clean))
-testing_descrip_corpus <- Corpus(VectorSource(testing_descrip_clean))
+training_tweet_corpus_C <-
+  Corpus(VectorSource(training_tweet_clean_C))
+training_tweet_corpus_L <-
+  Corpus(VectorSource(training_tweet_clean_L))
+training_tweet_corpus_U <-
+  Corpus(VectorSource(training_tweet_clean_U))
+training_desc_corpus_C <- 
+  Corpus(VectorSource(training_desc_clean_C))
+training_desc_corpus_L <- 
+  Corpus(VectorSource(training_desc_clean_L))
+training_desc_corpus_U <- 
+  Corpus(VectorSource(training_desc_clean_U))
 
 # Use inspect() to look at the contents of the corpus
-inspect(training_descrip_corpus[1:3])
+inspect(training_desc_corpus_C[1:10])
 
+# 4. Create a dictionary (using tweet and user description in training set)
+tweet_dict <-
+  cleanCorpus(cbind(as.character(training$text),
+                    as.character(training$description))) %>%
+  VectorSource(.) %>%
+  Corpus(.) %>%
+  DocumentTermMatrix(.) %>%
+  findFreqTerms(., 5) %>%
+  c(.)
+
+# 5. Create sparse matrices
+training_tweet_dtm_C <-
+  DocumentTermMatrix(training_tweet_corpus_C,
+                     list(dictionary = tweet_dict))
+training_tweet_dtm_L <-
+  DocumentTermMatrix(training_tweet_corpus_L,
+                     list(dictionary = tweet_dict))
+training_tweet_dtm_U <-
+  DocumentTermMatrix(training_tweet_corpus_U,
+                     list(dictionary = tweet_dict))
+training_desc_dtm_C <-
+  DocumentTermMatrix(training_desc_corpus_C,
+                     list(dictionary = tweet_dict))
+training_desc_dtm_L <-
+  DocumentTermMatrix(training_desc_corpus_L,
+                     list(dictionary = tweet_dict))
+training_desc_dtm_U <-
+  DocumentTermMatrix(training_desc_corpus_U,
+                     list(dictionary = tweet_dict))
+
+inspect(training_desc_dtm_C)
+findFreqTerms(training_tweet_dtm_C, 10)
+findFreqTerms(training_tweet_dtm_L, 10)
+findFreqTerms(training_tweet_dtm_U, 10)
+findFreqTerms(training_desc_dtm_C, 10)
+findFreqTerms(training_desc_dtm_L, 10)
+findFreqTerms(training_desc_dtm_U, 10)
 ###############################################################################
 ```
+
+### Bi-gram analysis
+http://stackoverflow.com/questions/23655694/r-find-most-frequent-group-of-words-in-corpus
