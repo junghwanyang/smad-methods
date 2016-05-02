@@ -1,0 +1,136 @@
+---
+title: "Test IRR 1000 Random Tweets"
+author: "JungHwan Yang"
+date: "February 17, 2015"
+output: html_document
+---
+
+This script is for testing inter-rater reliability (IRR) of the 1000 randomly selected tweets about *Obamacare*.
+
+### February 17, 2015
+
+The first 350 tweets were coded by Kristen Bialik (KB) and Ben Sayre (BS).
+The second 350 tweets were coded by Jeff Tischauser (JT) and Yini Zhang (YZ).
+The third 300 tweets were coded by JungHwan Yang (JY) and Rachel Kornfield (RK).
+
+
+```{r read data, eval = F}
+###############################################################################
+path <- "../R Project//Data/random1000-coded/random1000-mergedCoding.csv"
+d.coded <- read.csv (path)
+###############################################################################
+```
+
+
+
+Since the .csv file contains three different sets of coding for the variable (e.g., user ideology), I make different data frame from the original data.
+
+```{r}
+###############################################################################
+d.1.350 <- d.coded[1:350, c(2, 3)] # 1-350
+#names(d.1.350) <- c("KB", "BS")
+d.2.350 <- d.coded[1:350, c(5, 6)] # 351-700
+d.3.300 <- d.coded[1:300, c(9, 10)] # 701-1000
+###############################################################################
+```
+
+Test IRR see [This link](http://www.cookbook-r.com/Statistical_analysis/Inter-rater_reliability/)
+
+```{r install "irr" package}
+###############################################################################
+#install.packages("irr")
+library(irr)
+###############################################################################
+```
+
+### Test with Krippendorff's alpha
+
+This funciton is tricky because:
+
+- Need to change a data.frame to a matrix
+- Need to transpose a matrix: t()
+
+```{r}
+###############################################################################
+# Krippendorff's alpha
+kripp.alpha(t(as.matrix(d.1.350[,])), method = "nominal")
+kripp.alpha(t(as.matrix(d.2.350[,])), method = "nominal")
+kripp.alpha(t(as.matrix(d.3.300[,])), method = "nominal")
+###############################################################################
+```
+
+### Test with Cohen's Kappa
+
+Since it's categorical data for two raters, I calculate Cohen's Kappa for two coders.
+
+```{r}
+###############################################################################
+# Cohen's kappa
+kappa2(d.1.350, "unweighted")
+kappa2(d.2.350, "unweighted")
+kappa2(d.3.300, "unweighted")
+###############################################################################
+```
+
+```{r}
+###############################################################################
+path.new <- "../R Project//Data/random1000-coded/random1000-mergedCoding.csv"
+d.coded.new <- read.csv(path.new)
+###############################################################################
+```
+
+Here I test IRR among three people for only #351-700 tweets that Jinha coded.
+
+```{r}
+###############################################################################
+d.2.350.new <- d.coded.new[1:350, c(5, 6, 7)] # 351-700
+d.2.350.new.1 <- d.coded.new[1:350, c(5, 6)] # 351-700
+d.2.350.new.2 <- d.coded.new[1:350, c(5, 7)] # 351-700
+d.2.350.new.3 <- d.coded.new[1:350, c(6, 7)] # 351-700
+###############################################################################
+```
+
+### Test with Krippendorff's alpha
+
+This funciton is tricky because:
+
+- Need to change a data.frame to a matrix
+- Need to transpose a matrix: t()
+
+```{r}
+###############################################################################
+library(irr)
+
+# Krippendorff's alpha
+kripp.alpha(t(as.matrix(d.2.350.new[,])), method = "nominal") #a = .70
+kripp.alpha(t(as.matrix(d.2.350.new.1[,])), method = "nominal") #a = .71
+kripp.alpha(t(as.matrix(d.2.350.new.2[,])), method = "nominal") #a = .66
+kripp.alpha(t(as.matrix(d.2.350.new.3[,])), method = "nominal") #a = .75
+###############################################################################
+```
+
+```{r read data, eval = F}
+###############################################################################
+path <- "Data/merged-IRR50-WZ-YW.csv"
+d.coded <- read.csv (path, header = T)
+
+path <- "Data/merged-IRR50-JY-YW-RK.csv"
+d.coded <- read.csv (path, header = T)
+
+###############################################################################
+```
+
+
+```{r}
+library(irr)
+# Krippendorff's alpha
+kripp.alpha(t(as.matrix(d.coded[1:55,2:3])), method = "nominal")
+#WZ-YW: a = .70
+#JY-YW: a = .68
+kripp.alpha(t(as.matrix(d.coded[1:55,3:4])), method = "nominal")
+```
+
+```{r eval = F}
+library(knitr); library(pandoc)
+knit2html('Scripts/04 irr test 1000.Rmd')
+```

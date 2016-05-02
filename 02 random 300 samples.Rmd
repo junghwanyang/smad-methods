@@ -20,3 +20,55 @@ write.xlsx(tweets300, "parsedRandom300.xlsx", sheetName = "Sheet1",
            col.names = T, row.names = F, append = F, showNA = T)
 
 ```
+
+```{r}
+set.seed(77)
+random1000 <- sample(l, 1000)
+
+# Save as json
+write(random1000, "random1000.json")
+tweets1000 <- parseTweets(random1000)
+
+# Save as xlsx
+#install.packages("xlsx")
+library(xlsx)
+write.xlsx(tweets1000, "parsedRandom1000.xlsx", sheetName = "Sheet1",
+           col.names = T, row.names = F, append = F, showNA = T)
+
+```
+
+Code 600 more tweets in addition to the previous 1000
+
+```{r}
+set.seed(77)
+random1600 <- sample(l, 1600)
+
+# Save as json
+write(random1600, "random1600.json")
+tweets1600 <- parseTweets(random1600)
+
+# Save as xlsx
+#install.packages("xlsx")
+library(xlsx)
+write.xlsx(tweets1600, "parsedRandom1600.xlsx", sheetName = "Sheet1",
+           col.names = T, row.names = F, append = F, showNA = T)
+```
+
+
+Code 1100 more tweets in addition to the previous 1600
+**Use 1601 ~ 2700**
+
+```{r}
+set.seed(77)
+random2700 <- sample(l, 2700)
+
+# Save as json
+write(random2700, "random2700.json")
+tweets2700 <- parseTweets(random2700)
+
+# Save as xlsx
+#install.packages("xlsx")
+library(xlsx)
+write.xlsx(tweets2700, "parsedRandom2700.xlsx", sheetName = "Sheet1",
+           col.names = T, row.names = F, append = F, showNA = T)
+```

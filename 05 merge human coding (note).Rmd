@@ -1,0 +1,23 @@
+---
+title: "05 merge human coding (1300)"
+author: "JungHwan Yang"
+date: "March 17, 2015"
+output: html_document
+---
+
+#### Handling disagreement
+
+- We had total 7 coders. Three pairs of coders coded 300 ~ 350 tweets (total 1000). Intercoder reliability was tested. When there was a disagreement, the third coder's opinion was counted. If three coders didn't agree, we coded it as "U"
+- Three coders with high IRR scores coded 100 additional tweets.
+- Total number of human coded tweets were 1300.
+
+###### Related stuff
+
+- MergedDisagreement1000.xlsx
+- additional600-KB-JY-RK.xlsx
+- FinalHandcoded1300.xlsx
+
+- Rules
+1  Two coders with black color are main coders
+2. Coder with red color decides disagreement with other two coders
+3. If there is no single agreement among three coders, code it as U (unknown)

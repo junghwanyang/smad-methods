@@ -1,0 +1,47 @@
+---
+title: "Automated coding"
+author: "JungHwan Yang"
+date: "February 7, 2015"
+output: html_document
+---
+
+```{r}
+coding.j <- read.csv('Data/random1000-template.csv')
+coding.j <- read.csv('Data/additional600-template-J.csv')
+coding.j[,4]
+install.packages("stringi")
+library(stringi)
+
+coding.j[,3] <-
+  ifelse(stri_detect_regex(coding.j[,4],
+           'conservative|teaparty|tea party|republican|tcot',
+           case_insensitive=TRUE), "C",
+  ifelse(stri_detect_regex(coding.j[,4],
+           'democrat|progressive|obama2012',
+           case_insensitive=TRUE), "L", ""))
+
+table(stri_detect_regex(coding.j[,4], 'democrat|progressive|obama2012', case_insensitive=TRUE))
+
+write.csv(coding.j, "Data/random1000-template.csv")
+write.csv(coding.j, "Data/additional600-template-J.csv")
+```
+
+
+```{r}
+coding.j <- read.csv('Data/parsedRandom2700-J.csv')
+coding.j[,4]
+install.packages("stringi")
+library(stringi)
+
+coding.j[,3] <-
+  ifelse(stri_detect_regex(coding.j[,4],
+           'conservative|teaparty|tea party|republican|tcot',
+           case_insensitive=TRUE), "C",
+  ifelse(stri_detect_regex(coding.j[,4],
+           'democrat|progressive|obama2012',
+           case_insensitive=TRUE), "L", ""))
+
+table(stri_detect_regex(coding.j[,4], 'democrat|progressive|obama2012', case_insensitive=TRUE))
+
+write.csv(coding.j, "Data/parsedRandom2700-J.csv")
+```

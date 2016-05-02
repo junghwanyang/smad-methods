@@ -1,0 +1,144 @@
+---
+title: "07 LDA"
+author: "JungHwan Yang"
+date: "April 10, 2015"
+output: html_document
+---
+
+### Linear Discriminant Analysis (LDA)
+
+We need to modify data frame before running LDA. Here, I am using a working data frame named training_dtm_desc
+
+To begin with, here's the list of popular keywords of profile description among the conservatives and the librals:
+
+| Conservative | Libaral  |
+| -------------: |-------------:|
+| conservative/conservatives/conservatism/conservatarian| liberal |
+| christian | progressive |
+| tea (/party) | democrat |
+| freedom | people |
+| god | left |
+| constitution/constitutional/constitutionalist | social |
+| liberty | public |
+| republican | feminist |
+| libertarian | affordable |
+| patriot | prochoice |
+| prolife | obamacare |
+
+Since I haven't done stemming, I do here manually.
+
+```{r}
+# Stemming
+training_dtm_combined$conservative <-
+  training_dtm_combined$conservative + training_dtm_combined$conservatives +
+  training_dtm_combined$conservatism + training_dtm_combined$conservatarian
+training_dtm_combined$conservatives <- NULL
+training_dtm_combined$conservatism <- NULL
+training_dtm_combined$conservatarian <- NULL
+
+training_dtm_combined$constitution <-
+  training_dtm_combined$constitution + training_dtm_combined$constitutional +
+  training_dtm_combined$constitutionalist
+training_dtm_combined$constitutional <- NULL
+training_dtm_combined$constitutionalist <- NULL
+
+training_dtm_combined$tweet <-
+  training_dtm_combined$tweet + training_dtm_combined$tweeter +
+  training_dtm_combined$tweeting + training_dtm_combined$tweets
+training_dtm_combined$tweet <- NULL
+training_dtm_combined$tweeter <- NULL
+training_dtm_combined$tweeting <- NULL
+training_dtm_combined$tweets <- NULL
+```
+
+```{r}
+# Stemming
+training_dtm_combined_sm$conservative <-
+  training_dtm_combined_sm$conservative + training_dtm_combined_sm$conservatism +
+  training_dtm_combined_sm$conservatarian
+training_dtm_combined_sm$conservatism <- NULL
+training_dtm_combined_sm$conservatarian <- NULL
+
+training_dtm_combined_sm$constitution <-
+  training_dtm_combined_sm$constitution + training_dtm_combined_sm$constitutional
+training_dtm_combined_sm$constitutional <- NULL
+
+training_dtm_combined_sm$tweets <-
+  training_dtm_combined_sm$tweeter +
+  training_dtm_combined_sm$tweeting + training_dtm_combined_sm$tweets
+training_dtm_combined_sm$tweeter <- NULL
+training_dtm_combined_sm$tweeting <- NULL
+
+```
+
+```{r, echo = F}
+library(MASS)
+# Linear Discriminant Analysis with Jacknifed Prediction 
+# Use profile description
+fit.1 <- 
+  lda(User_Ideology ~ conservative + christian + tea + #conservative
+        freedom + god + constitution + liberty + republican +
+        libertarian + patriot + prolife +
+        business +
+        liberal + progressive + democrat + people + left + #liberal
+        social + public + feminist + affordable + prochoice + obamacare +
+        proud + truth + policy + activist + working +
+        health + twitter + rts + research + place + #unknown
+        interested + endorsements + reporter + world, 
+        data = training_dtm_combined, 
+        na.action="na.omit", CV=TRUE)
+fit.1 # show results
+
+# Assess the accuracy of the prediction
+# percent correct for each category of User_Ideology
+ct <- table(training_dtm_combined$User_Ideology, fit.1$class)
+diag(prop.table(ct, 1))
+# total percent correct
+
+sum(diag(prop.table(ct)))
+
+
+ct <- table(test_dtm$User_Ideology, test.result$class)
+# Linear Discriminant Analysis with Jacknifed Prediction 
+# Use profile description and tweet hashtags
+fit.2 <- 
+  lda(User_Ideology ~ conservative + christian + tea + #conservative
+        freedom + god + constitution + liberty + republican +
+        libertarian + patriot + prolife +
+        business +
+        liberal + progressive + democrat + people + left + #liberal
+        social + public + feminist + affordable + prochoice + obamacare +
+        proud + truth + policy + activist + working +
+        health + twitter + rts + research + place + #unknown
+        interested + endorsements + reporter + world +
+        h.tcot + h.teaparty + h.gop + h.sgp + h.tlot + h.repeal +
+        h.aca + h.p2 + h.hcr + h.obama2012 +
+        h.news + h.job + h.jobs +
+        h.ilikeobamacare, 
+        data = training_dtm_combined,
+        na.action="na.omit", CV=TRUE)
+fit.2 # show results
+
+# Assess the accuracy of the prediction
+# percent correct for each category of User_Ideology
+ct <- table(training_dtm_combined$User_Ideology, fit.2$class)
+diag(prop.table(ct, 1))
+# total percent correct
+sum(diag(prop.table(ct)))
+
+# Linear Discriminant Analysis with Jacknifed Prediction 
+# Use profile description and tweet hashtags
+fit.3 <- 
+  lda(User_Ideology ~ ., 
+        data = training_dtm_combined, 
+        na.action="na.omit", CV=TRUE, tol = .03)
+fit.3 # show results
+
+# Assess the accuracy of the prediction
+# percent correct for each category of User_Ideology
+ct <- table(training_dtm_combined$User_Ideology, fit.3$class)
+diag(prop.table(ct, 1))
+# total percent correct
+sum(diag(prop.table(ct)))
+
+```

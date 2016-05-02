@@ -10,6 +10,7 @@ output: html_document
 ```{r read data, eval = F}
 ###############################################################################
 path <- "../R Project//Data/FinalHandcoded1300.csv"
+path <- "../R Project//Data/FinalHandcoded2700.csv"
 d <- read.csv (path)
 ###############################################################################
 ```
@@ -53,6 +54,8 @@ Let's use tm() and stringr() package here (among many others).
 
 More about regular expression: http://www.seasite.niu.edu/trans/Regular_Expression_Tutorial.htm
 
+More about text mapping: http://www.rdatamining.com/examples/text-mining
+
 ```{r}
 ###############################################################################
 # 1. Use stringr() to remove non-alphanumeric words before creating a corpus
@@ -61,22 +64,81 @@ library(stringr); library(dplyr); library(tm)
 # Create cleanCorpus function for this
 ## Note: Use a variable from dataframe instead of using a corpus object
 
+myStopwords <- c(stopwords('english'),
+                 "obamacare", "obama", "care", "affordable care act",
+                 "healthcare", "health care", "via")
+myStopwords.desc <- c(stopwords('english'))
+
 cleanCorpus <- function(corpus) {
  corpus.tmp <- corpus %>%
   str_replace_all("[^[:graph:]]", " ") %>% #remove graphical chars
   str_replace_all("([@][0-9A-Za-z_:]+)", "") %>% #remove @username
   str_replace_all("RT |MT ", "") %>% #remove RT and MT
   str_replace_all("([#][0-9A-Za-z_:]+)", "") %>% #remove #hashtag
-  str_replace_all("'s", "") %>% #remove 's
-  str_replace_all("[:;\\/.,_'|\"()!?%-]", "") %>% #remove punctuations except #
+  tolower(.) %>% #change into lowercase
   str_replace_all("[[:space:]]", " ") %>% #remove white space
-  str_replace_all("(http[0-9A-Za-z]+)", "") %>% #remove links
-  tolower(.) # change into lowercase
+  str_replace_all("(http[0-9A-Za-z://.]+)", "") #remove links
  return(corpus.tmp)
 }
 
+
 # Unused line
 #str_replace_all("[^[:alnum:]]|â|Â|???|ð|ã|î", "") #remove graphical chars
+#str_replace_all("[:;\\/.,_'|\"()!?%-]", "") %>% #remove punctuations except #
+
+
+# Create cleanCorpusHash function that cleans text but keeps hashtags
+
+cleanCorpusHash <- function(corpus) {
+ corpus.tmp <- corpus %>%
+  str_replace_all("[^[:graph:]]", " ") %>% #remove graphical chars
+  str_replace_all("([@][0-9A-Za-z_:]+)", "") %>% #remove @username  
+  str_replace_all("RT @|MT @", "") %>% #remove RT and MT
+  tolower(.) %>% #change into lowercase
+  str_replace_all("[[:space:]]", " ") %>% #remove white space
+  str_replace_all("(http[0-9A-Za-z://.]+)", "") %>% #remove links
+  gsub("([#])|[[:punct:]]", "\\1", .) #remove punctuations wo #
+ return(corpus.tmp)
+}
+
+# Create cleanCorpusHashRT function that cleans text but keeps hashtags and RT
+
+cleanCorpusHashRT <- function(corpus) {
+ corpus.tmp <- corpus %>%
+  str_replace_all("[^[:graph:]]", " ") %>% #remove graphical chars
+  str_replace_all("RT @|MT @", "RTATUSER") %>% #replace RT and MT into RTATUSER
+  str_replace_all("([@][0-9A-Za-z_:]+)", "") %>% #remove @mentions
+  str_replace_all("ATUSER", "") %>% #restore RT
+  tolower(.) %>% #change into lowercase
+  str_replace_all("[[:space:]]", " ") %>% #remove white space
+  str_replace_all("(http[0-9A-Za-z://.]+)", "") %>% #remove links
+  gsub("([#])|[[:punct:]]", "\\1", .) #remove punctuations wo #
+ return(corpus.tmp)
+}
+
+
+########### THIS IS NOT WORKING. NEED TO WORK
+# Create a function to extract hashtags
+# extractHashtag <- function(hashtag) {
+#  hashtag.tmp <- hashtag %>%
+#    str_replace_all("[[:space:]]", " ") %>% #remove white space
+#    str_replace_all("[^[:graph:]]", " ") %>% #remove graphical chars
+#    str_replace_all("(http[0-9A-Za-z://.]+)", "") %>% #remove links
+#    str_extract_all("([#][0-9A-Za-z_:]+)") %>% #extract #hashtags
+#    tolower(.)
+#  return(hashtag.tmp)
+# }
+# ### This returns some weird characters. And output format looks a bit odd. Need to improve the syntax.
+# dddd <- data.frame(extractHashtag(training$text))
+# dddd[dddd == "character(0)"] <- NA
+# 
+# apply(c("#megustaobamacare", "#fnf"), 1, paste(gsub("c\\(", ""),  collapse = " "))
+#    paste(gsub("c\\(", "", dddd[5,]),  collapse = " ") %>%
+#    paste(gsub("\\)", "", .),  collapse = " ")
+# dddd <- dddd %>%
+#    paste(gsub("c\\(", "", dddd),  collapse = " ") %>%
+#    paste(gsub("\\)", "", .),  collapse = " ") %>%
+#    paste(gsub(",", "", .),  collapse = " ")
 ###############################################################################
 ```
 
@@ -124,48 +186,402 @@ training_desc_corpus_L <-
 training_desc_corpus_U <- 
   Corpus(VectorSource(training_desc_clean_U))
 
+# 4. Remove Stopwords, links, and punctuations
+training_tweet_corpus_C <-
+  training_tweet_corpus_C %>%
+  tm_map(removeWords, myStopwords) %>%
+  tm_map(removePunctuation)
+training_tweet_corpus_L <-
+  training_tweet_corpus_L %>%
+  tm_map(removeWords, myStopwords) %>%
+  tm_map(removePunctuation)
+training_tweet_corpus_U <-
+  training_tweet_corpus_U %>%
+  tm_map(removeWords, myStopwords) %>%
+  tm_map(removePunctuation)
+training_desc_corpus_C <-
+  training_desc_corpus_C %>%
+  tm_map(removeWords, myStopwords.desc) %>%
+  tm_map(removePunctuation)
+training_desc_corpus_L <-
+  training_desc_corpus_L %>%
+  tm_map(removeWords, myStopwords.desc) %>%
+  tm_map(removePunctuation)
+training_desc_corpus_U <-
+  training_desc_corpus_U %>%
+  tm_map(removeWords, myStopwords.desc) %>%
+  tm_map(removePunctuation)
+
 # Use inspect() to look at the contents of the corpus
+inspect(training_tweet_corpus_C[1:10])
 inspect(training_desc_corpus_C[1:10])
 
-# 4. Create a dictionary (using tweet and user description in training set)
-tweet_dict <-
-  cleanCorpus(cbind(as.character(training$text),
-                    as.character(training$description))) %>%
-  VectorSource(.) %>%
-  Corpus(.) %>%
-  DocumentTermMatrix(.) %>%
-  findFreqTerms(., 5) %>%
-  c(.)
+# 5. Stem documents --- PRODUCES ERROR!
+# install.packages("SnowballC"); install.packages("RWeka")
+# install.packages("rJava"); install.packages("RWekajars")
+# library(SnowballC); library(RWeka); library(rJava); library(RWekajars)
+# dictCorpus <- training_tweet_corpus_C
+# # stem words in a text document with the snowball stemmers,
+# # which requires packages Snowball, RWeka, rJava, RWekajars
+# training_tweet_corpus_C <- 
+#   tm_map(training_tweet_corpus_C, stemDocument)
 
-# 5. Create sparse matrices
+
+# 6. Create a dictionary (using tweet and user description in training set)
+# tweet_dict <-
+#   cleanCorpus(cbind(as.character(training$text),
+#                     as.character(training$description))) %>%
+#   VectorSource(.) %>%
+#   Corpus(.) %>%
+#   DocumentTermMatrix(.) %>%
+#   findFreqTerms(., 5) %>%
+#   c(.)
+
+# 7. Create sparse matrices
 training_tweet_dtm_C <-
-  DocumentTermMatrix(training_tweet_corpus_C,
-                     list(dictionary = tweet_dict))
+  DocumentTermMatrix(training_tweet_corpus_C)
 training_tweet_dtm_L <-
-  DocumentTermMatrix(training_tweet_corpus_L,
-                     list(dictionary = tweet_dict))
+  DocumentTermMatrix(training_tweet_corpus_L)
 training_tweet_dtm_U <-
-  DocumentTermMatrix(training_tweet_corpus_U,
-                     list(dictionary = tweet_dict))
+  DocumentTermMatrix(training_tweet_corpus_U)
 training_desc_dtm_C <-
-  DocumentTermMatrix(training_desc_corpus_C,
-                     list(dictionary = tweet_dict))
+  DocumentTermMatrix(training_desc_corpus_C)
 training_desc_dtm_L <-
-  DocumentTermMatrix(training_desc_corpus_L,
-                     list(dictionary = tweet_dict))
+  DocumentTermMatrix(training_desc_corpus_L)
 training_desc_dtm_U <-
-  DocumentTermMatrix(training_desc_corpus_U,
-                     list(dictionary = tweet_dict))
+  DocumentTermMatrix(training_desc_corpus_U)
 
-inspect(training_desc_dtm_C)
+# 8. Summary
+sort(colSums(inspect(training_tweet_dtm_C)), decreasing = F)
+sort(colSums(inspect(training_desc_dtm_C)), decreasing = F)
+sort(colSums(inspect(training_desc_dtm_L)), decreasing = F)
 findFreqTerms(training_tweet_dtm_C, 10)
-findFreqTerms(training_tweet_dtm_L, 10)
-findFreqTerms(training_tweet_dtm_U, 10)
+findFreqTerms(training_tweet_dtm_L, 7)
+findFreqTerms(training_tweet_dtm_U, 4)
 findFreqTerms(training_desc_dtm_C, 10)
-findFreqTerms(training_desc_dtm_L, 10)
-findFreqTerms(training_desc_dtm_U, 10)
+findFreqTerms(training_desc_dtm_L, 7)
+findFreqTerms(training_desc_dtm_U, 4)
 ###############################################################################
 ```
+
+As far as I understand, in order to run LDA, I need to have a data frame with a documentTermMatrix attached to it.
+
+```{r}
+# Create DocumentTermMatrices for the entire training set
+# Create different sets for tweets and description
+training_tweet_clean <-
+  cleanCorpus(training$text)
+training_desc_clean <-
+  cleanCorpus(training$description)
+
+training_tweet_corpus <-
+  Corpus(VectorSource(training_tweet_clean))
+training_desc_corpus <-
+  Corpus(VectorSource(training_desc_clean))
+
+training_tweet_corpus <-
+  training_tweet_corpus %>%
+  tm_map(removeWords, myStopwords) %>%
+  tm_map(removePunctuation)
+training_desc_corpus <-
+  training_desc_corpus %>%
+  tm_map(removeWords, myStopwords.desc) %>%
+  tm_map(removePunctuation)
+
+training_tweet_dtm <-
+  DocumentTermMatrix(training_tweet_corpus)
+training_desc_dtm <-
+  DocumentTermMatrix(training_desc_corpus)
+
+# Convert DTM object into data.frame
+#(Here, I tested only with profile description information)
+dtm_desc <- as.data.frame(inspect(training_desc_dtm))
+
+summary(dtm_desc)
+training_dtm_desc <- cbind(training, dtm_desc)
+```
+
+I want to create a documentTermMatrix of hashtags and attach to the data frame that I created above.
+
+```{r}
+###############################################################################
+# 2. Clean text of training set using cleanCorpusHash()
+## Treat R, L, U separately
+training_tweet_H_clean_C <-
+  cleanCorpusHash(training$text[training$User_Ideology=="C"])
+training_tweet_H_clean_L <-
+  cleanCorpusHash(training$text[training$User_Ideology=="L"])
+training_tweet_H_clean_U <-
+  cleanCorpusHash(training$text[training$User_Ideology=="U"])
+training_desc_H_clean_C <- 
+  cleanCorpusHash(training$description[training$User_Ideology=="C"])
+training_desc_H_clean_L <- 
+  cleanCorpusHash(training$description[training$User_Ideology=="L"])
+training_desc_H_clean_U <- 
+  cleanCorpusHash(training$description[training$User_Ideology=="U"])
+
+
+# 3. Creating a corpus
+training_tweet_H_corpus_C <-
+  Corpus(VectorSource(training_tweet_H_clean_C))
+training_tweet_H_corpus_L <-
+  Corpus(VectorSource(training_tweet_H_clean_L))
+training_tweet_H_corpus_U <-
+  Corpus(VectorSource(training_tweet_H_clean_U))
+training_desc_H_corpus_C <- 
+  Corpus(VectorSource(training_desc_H_clean_C))
+training_desc_H_corpus_L <- 
+  Corpus(VectorSource(training_desc_H_clean_L))
+training_desc_H_corpus_U <- 
+  Corpus(VectorSource(training_desc_H_clean_U))
+
+# 4. Remove Stopwords
+training_tweet_H_corpus_C <-
+  training_tweet_H_corpus_C %>%
+  tm_map(removeWords, myStopwords)
+training_tweet_H_corpus_L <-
+  training_tweet_H_corpus_L %>%
+  tm_map(removeWords, myStopwords)
+training_tweet_H_corpus_U <-
+  training_tweet_H_corpus_U %>%
+  tm_map(removeWords, myStopwords)
+training_desc_H_corpus_C <-
+  training_desc_H_corpus_C %>%
+  tm_map(removeWords, myStopwords.desc)
+training_desc_H_corpus_L <-
+  training_desc_H_corpus_L %>%
+  tm_map(removeWords, myStopwords.desc)
+training_desc_H_corpus_U <-
+  training_desc_H_corpus_U %>%
+  tm_map(removeWords, myStopwords.desc)
+
+# Use inspect() to look at the contents of the corpus
+inspect(training_tweet_H_corpus_C[1:10])
+inspect(training_desc_H_corpus_C[1:10])
+
+# # 5. Stem documents --- PRODUCES ERROR!
+# # SKIP THIS PROCESS CAUSE IT SPITS ERRORS
+# install.packages("SnowballC"); install.packages("RWeka")
+# install.packages("rJava"); install.packages("RWekajars")
+# library(SnowballC); library(RWeka); library(rJava); library(RWekajars)
+# dictCorpus <- training_tweet_corpus_C
+# # stem words in a text document with the snowball stemmers,
+# # which requires packages Snowball, RWeka, rJava, RWekajars
+# training_tweet_corpus_C <- 
+#   tm_map(training_tweet_corpus_C, stemDocument)
+
+
+# # 6. Create a dictionary (using tweet and user description in training set)
+# # SKIP THIS PROCESS CAUSE IT'S NOT STABLE
+# tweet_dict <-
+#   cleanCorpus(cbind(as.character(training$text),
+#                     as.character(training$description))) %>%
+#   VectorSource(.) %>%
+#   Corpus(.) %>%
+#   DocumentTermMatrix(.) %>%
+#   findFreqTerms(., 5) %>%
+#   c(.)
+
+# 7. Create sparse matrices
+training_tweet_H_dtm_C <-
+  DocumentTermMatrix(training_tweet_H_corpus_C)
+training_tweet_H_dtm_L <-
+  DocumentTermMatrix(training_tweet_H_corpus_L)
+training_tweet_H_dtm_U <-
+  DocumentTermMatrix(training_tweet_H_corpus_U)
+training_desc_H_dtm_C <-
+  DocumentTermMatrix(training_desc_H_corpus_C)
+training_desc_H_dtm_L <-
+  DocumentTermMatrix(training_desc_H_corpus_L)
+training_desc_H_dtm_U <-
+  DocumentTermMatrix(training_desc_H_corpus_U)
+
+# 8. Summary
+sort(colSums(inspect(training_tweet_H_dtm_C)), decreasing = F)
+sort(colSums(inspect(training_desc_H_dtm_C)), decreasing = F)
+sort(colSums(inspect(training_desc_H_dtm_L)), decreasing = F)
+findFreqTerms(training_tweet_H_dtm_C, 10)
+findFreqTerms(training_tweet_H_dtm_L, 7)
+findFreqTerms(training_tweet_H_dtm_U, 4)
+findFreqTerms(training_desc_H_dtm_C, 10)
+findFreqTerms(training_desc_H_dtm_L, 7)
+findFreqTerms(training_desc_H_dtm_U, 4)
+###############################################################################
+```
+
+As far as I understand, in order to run LDA, I need to have a data frame with a documentTermMatrix attached to it.
+I want to create a documentTermMatrix of hashtags and attach to the data frame that I created above.
+
+```{r}
+# Create DocumentTermMatrices for the entire training set
+# Create different sets for tweets and description
+training_tweet_H_clean <-
+  cleanCorpusHash(training$text)
+training_desc_H_clean <-
+  cleanCorpusHash(training$description)
+
+training_tweet_H_corpus <-
+  Corpus(VectorSource(training_tweet_H_clean))
+training_desc_H_corpus <-
+  Corpus(VectorSource(training_desc_H_clean))
+
+training_tweet_H_corpus <-
+  training_tweet_H_corpus %>%
+  tm_map(removeWords, myStopwords)
+training_desc_H_corpus <-
+  training_desc_H_corpus %>%
+  tm_map(removeWords, myStopwords.desc)
+
+training_tweet_H_dtm <-
+  DocumentTermMatrix(training_tweet_H_corpus)
+training_desc_H_dtm <-
+  DocumentTermMatrix(training_desc_H_corpus)
+
+# Convert DTM object into data.frame
+#(Here, I tested only with profile description information)
+dtm_tweet_H <- as.data.frame(inspect(training_tweet_H_dtm))
+dtm_desc_H <- as.data.frame(inspect(training_desc_H_dtm))
+
+# From the tweet DTM, subset only hashtag information
+# Grab all the variables that starts with #
+dtm_tweet_H <- dtm_tweet_H[,grep("^#", names(dtm_tweet_H))]
+# Change the variable names of the hashtag DTM by replacing # with h.
+names (dtm_tweet_H) <-
+  names(dtm_tweet_H) %>%
+  gsub("#", "h.", .)
+
+# Combine three DTMs together
+training_dtm_combined <- cbind(training, dtm_desc_H, dtm_tweet_H)
+
+#write.csv(training_dtm_combined, "dtm.csv")
+```
+
+I want to create a documentTermMatrix of RTs and attach to the data frame that I created above.
+
+```{r}
+###############################################################################
+# 2. Clean text of training set using cleanCorpusHashRT()
+## Treat R, L, U separately
+training_tweet_HRT_clean_C <-
+  cleanCorpusHashRT(training$text[training$User_Ideology=="C"])
+training_tweet_HRT_clean_L <-
+  cleanCorpusHashRT(training$text[training$User_Ideology=="L"])
+training_tweet_HRT_clean_U <-
+  cleanCorpusHashRT(training$text[training$User_Ideology=="U"])
+
+# 3. Creating a corpus
+training_tweet_HRT_corpus_C <-
+  Corpus(VectorSource(training_tweet_HRT_clean_C))
+training_tweet_HRT_corpus_L <-
+  Corpus(VectorSource(training_tweet_HRT_clean_L))
+training_tweet_HRT_corpus_U <-
+  Corpus(VectorSource(training_tweet_HRT_clean_U))
+
+# 4. Remove Stopwords
+training_tweet_HRT_corpus_C <-
+  training_tweet_HRT_corpus_C %>%
+  tm_map(removeWords, myStopwords)
+training_tweet_HRT_corpus_L <-
+  training_tweet_HRT_corpus_L %>%
+  tm_map(removeWords, myStopwords)
+training_tweet_HRT_corpus_U <-
+  training_tweet_HRT_corpus_U %>%
+  tm_map(removeWords, myStopwords)
+
+# # 5. Stem documents --- PRODUCES ERROR!
+# # SKIP THIS PROCESS CAUSE IT SPITS ERRORS
+# install.packages("SnowballC"); install.packages("RWeka")
+# install.packages("rJava"); install.packages("RWekajars")
+# library(SnowballC); library(RWeka); library(rJava); library(RWekajars)
+# dictCorpus <- training_tweet_corpus_C
+# # stem words in a text document with the snowball stemmers,
+# # which requires packages Snowball, RWeka, rJava, RWekajars
+# training_tweet_corpus_C <- 
+#   tm_map(training_tweet_corpus_C, stemDocument)
+# 
+# 
+# # 6. Create a dictionary (using tweet and user description in training set)
+# # SKIP THIS PROCESS CAUSE IT'S NOT STABLE
+# tweet_dict <-
+#   cleanCorpus(cbind(as.character(training$text),
+#                     as.character(training$description))) %>%
+#   VectorSource(.) %>%
+#   Corpus(.) %>%
+#   DocumentTermMatrix(.) %>%
+#   findFreqTerms(., 5) %>%
+#   c(.)
+
+# 7. Create sparse matrices
+training_tweet_HRT_dtm_C <-
+  DocumentTermMatrix(training_tweet_HRT_corpus_C)
+training_tweet_HRT_dtm_L <-
+  DocumentTermMatrix(training_tweet_HRT_corpus_L)
+training_tweet_HRT_dtm_U <-
+  DocumentTermMatrix(training_tweet_HRT_corpus_U)
+
+# 8. Summary
+sort(colSums(inspect(training_tweet_HRT_dtm_C)), decreasing = F)
+sort(colSums(inspect(training_tweet_HRT_dtm_L)), decreasing = F)
+sort(colSums(inspect(training_tweet_HRT_dtm_U)), decreasing = F)
+
+###############################################################################
+```
+
+As far as I understand, in order to run LDA, I need to have a data frame with a documentTermMatrix attached to it.
+I want to create a documentTermMatrix of hashtags and attach to the data frame that I created above.
+
+```{r}
+# Create DocumentTermMatrices for the entire training set
+# Create different sets for tweets and description
+training_tweet_HRT_clean <-
+  cleanCorpusHashRT(training$text)
+
+training_tweet_HRT_corpus <-
+  Corpus(VectorSource(training_tweet_HRT_clean))
+
+training_tweet_HRT_corpus <-
+  training_tweet_HRT_corpus %>%
+  tm_map(removeWords, myStopwords)
+
+training_tweet_HRT_dtm <-
+  DocumentTermMatrix(training_tweet_HRT_corpus)
+
+# Convert DTM object into data.frame
+#(Here, I tested only with profile description information)
+dtm_tweet_HRT <- as.data.frame(inspect(training_tweet_HRT_dtm))
+
+# From the tweet DTM, subset only hashtag information
+# Grab all the variables that starts with #
+dtm_tweet_HRT <- dtm_tweet_HRT[,grep("^rt", names(dtm_tweet_HRT))]
+
+# Combine four DTMs together
+training_dtm_combined <- 
+  cbind(training, dtm_desc_H, dtm_tweet_H, dtm_tweet_HRT)
+
+# Remove variables that are not necessary for LDA
+training_dtm_combined <- training_dtm_combined[, -c(1, 3:44)]
+write.csv(training_dtm_combined, "dtm_allwords.csv")
+write.csv(myStopwords, "stopwords.csv")
+#summarise_each(training_dtm_combined, funs(sum), select = -User_Ideology)
+
+# Drop variable that rarely appeared
+training_dtm_combined <- 
+  rbind(training_dtm_combined, c(NA, colSums(training_dtm_combined[, -1])))
+
+training_dtm_combined_sm <- 
+  cbind(training_dtm_combined[, 1], training_dtm_combined_sm)
+training_dtm_combined_sm <-
+  training_dtm_combined_sm[-nrow(training_dtm_combined_sm), ]
+library(reshape)
+training_dtm_combined_sm <- 
+  rename(training_dtm_combined_sm, 
+         c("training_dtm_combined[, 1]" = "User_Ideology"))
+```
+
+
+
+# Sentiment analysis
+https://mkmanu.wordpress.com/2014/08/05/sentiment-analysis-on-twitter-data-text-analytics-tutorial/
 
 ### Bi-gram analysis
 http://stackoverflow.com/questions/23655694/r-find-most-frequent-group-of-words-in-corpus
