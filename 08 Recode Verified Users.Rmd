@@ -1,78 +1,55 @@
 ---
-title: "08 Recode Verified Users"
+title: "03 json_to_r"
 author: "JungHwan Yang"
-date: "April 1, 2016"
+date: "April 30, 2016"
 output: html_document
 ---
 
-I found that handcoding randomly selected tweets might miss the tweets from an influential account (e.g., @nytimes). If machine learning algorithm mistakenly classified the influential account, it may cause errors in other accounts' classfication because their information is more likely to be popular among other Twitter users.
-
-So, I picked verified users (who are more likely to be influentials) from the dataset and picked the top *1.5%* (double check) non-verified users and recoded their ideology with the other coder (Rachel Kornfield). We coded the all verified accounts and a number of non-verified accounts that have clear political leaning.
-
-```{r}
-setwd('/Users/JYang/Documents/SMAD/smad-methods/Obamacare/R Project/Data/')
-d <- read.csv('elite recoded data/List of Obamacare Elites - verified.csv')
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
-The script below describes how I merged the new coding with the old coding.
+## Reading json file to R
+
+This script reads a *.json file with political ideology labels (obamacare_labeled.json) and converts into R data frame.
 
 ```{r}
-d$Ideology.recode <- 
-  ifelse((as.character(d$Ideology) == as.character(d$Ideology.recode) |
-          as.character(d$Ideology.recode) == ""),
-         as.character(d$Ideology),
-         as.character(d$Ideology.recode))
+con <- file("./Data/obamacare_labeled.json",open = "r")
+obamacare<-vector("list")
+i=0
+while(T){
+  i<-i+1
+  temp<-readLines(con,1)
+  if(length(temp)==0){
+    print("reach the end")
+    break
+  } else
+  obamacare[[i]]<-fromJSON(temp)
+}
+close(con)
+
+rm(con); rm(i); rm(temp)
+save(obamacare,file="../R Project/Data/obamacare_relabeled.RData")
 ```
 
-So, now I have recoded classification of the verified users.
-Now, merge with 1643 coded file using merge() - similar to VLOOKUP in Excel.
+## Extracting variables from a list object
 
-http://www.rforexcelusers.com/vlookup-in-r/
-
-```{r}
-# Read user names from the formerly handcoded data
-d.1643 <- read.csv('FinalHandcoded1643.csv')
-
-# # Since the variable names of the two file don't match, I'll change it here.
-# names(d)[c(5,8)] <- c("screen_name", "User_Ideology")
-
-# Merge two dataframes
-d.extra <- 
-  merge(d.1643, d[, c("Username", "Ideology")],
-        by.x = "screen_name", by.y = "Username", all = T)
-
-# Merge Idelogy coding
-temp <- 
-  ifelse(as.character(d.extra$User_Ideology) == as.character(d.extra$Ideology) |
-         is.na(d.extra$Ideology),
-         as.character(d.extra$User_Ideology), as.character(d.extra$Ideology))
-d.extra$User_Ideology <- 
-  ifelse(is.na(temp), as.character(d.extra$Ideology),
-         temp)
-d.extra$Ideology <- NULL
-rm(temp)
-```
-
-Now, the new coding is merged with the old coding. Now, I collected data
+The .RData is a large list that contains a number of list-in-list objects. The following code converts the subset of the list object into a R dataframe.
 
 ```{r}
-# These are the elite users who we additionally coded and that were not in the initial coding set.
-# write.csv (d.extra[1644:nrow(d.extra),1], "extraEliteUsersList.csv",
-#            row.names = F, quote = F)
-# Here I pull radom sample of their tweets from *.RData file that I made using aobamacare.json
-load("~/Documents/SMAD/smad-methods/Obamacare/R Project/Data/obamacare.RData")
+load("~/obamacare_relabeled.RData") #modify according to a location of working directory
 
-# using 'obamacare' object, which contains raw json data, I extracted these properties:
-screen_name <- sapply(obamacare, with, user$screen_name)
-text <- sapply(obamacare, with, text)
-retweet_count <- sapply(obamacare, with, retweet_count)
 id_str <- sapply(obamacare, with, id_str)
+user_ideology <- sapply(obamacare, with, ideology)
+screen_name <- sapply(obamacare, with, user$screen_name)
+name <- sapply(obamacare, with, user$name)
+user_id_str <- sapply(obamacare, with, user$id_str)
+text <- sapply(obamacare, with, text)
 created_at <- sapply(obamacare, with, id_str)
 verified <- sapply(obamacare, with, user$verified)
-user_id_str <- sapply(obamacare, with, user$id_str)
+retweet_count <- sapply(obamacare, with, retweet_count)
 statuses_count <- sapply(obamacare, with, user$statuses_count)
 followers_count <- sapply(obamacare, with, user$followers_count)
-name <- sapply(obamacare, with, user$name)
 friends_count <- sapply(obamacare, with, user$friends_count)
 # some elements require to do as follows to handle a list
 description <-
@@ -83,43 +60,33 @@ time_zone <-
   sapply(obamacare, function(x) return(x$user$time_zone))
 time_zone <- 
   sapply(time_zone, function(x) ifelse(is.null(x), NA, x))
-# retweet_user <- 
-#   sapply(obamacare, function(x) return(x$retweeted_status$user$screen_name))
-# retweet_user <- 
-#   sapply(retweet_user, function(x) ifelse(is.null(x), NA, x))
+retweet_user <-
+  sapply(obamacare, function(x) return(x$retweeted_status$user$screen_name))
+retweet_user <-
+  sapply(retweet_user, function(x) ifelse(is.null(x), NA, x))
 
-# get_re = function(x) return (x$retweeted_status$user$screen_name)
-# retweet_user = sapply(obamacare, FUN = get_re)
+obamacare_relabeled <-
+  data.frame(id_str, user_ideology, screen_name, name, user_id_str, text,
+             description, created_at, verified, statuses_count, retweet_count,
+             retweet_user, time_zone, followers_count, friends_count)
 
-
-d.all <-
-  data.frame(screen_name, text, retweet_count, id_str, created_at, verified,
-             user_id_str, description, followers_count, name, time_zone,
-             friends_count)
 rm(screen_name); rm(text); rm(retweet_count); rm(id_str); rm(created_at);
 rm(verified); rm(user_id_str); rm(description); rm(followers_count);rm(name);
-rm(time_zone); rm(friends_count)
+rm(retweet_user); rm(time_zone); rm(friends_count); rm(user_ideology);
+rm(statuses_count)
 
-# get_re = function(x) return (x$retweeted_status$user$screen_name)
-# retweet_user = sapply(obamacare, FUN = get_re)
+# Remove white spaces in some variables due to format errors while saving .csv
+# obamacare_relabeled$text <-
+#   data.frame(gsub("\\s", " ", obamacare_relabeled$text))
+# obamacare_relabeled$description <-
+#   data.frame(gsub("\\s", " ", obamacare_relabeled$description))
+# obamacare_relabeled$name <-
+#   data.frame(gsub("\\s", " ", obamacare_relabeled$name))
+obamacare_relabeled <-
+  as.data.frame(apply(obamacare_relabeled, 2, function(x)gsub('\\s+', ' ',x)))
 
-d.all$retweet_user <- NULL
-
-# Find the verified users (d.extra) from d.all
-## Make a list of additional users
-extra.list <- as.vector(d.extra[1644:nrow(d.extra), c(1, 3)])
-## Find the tweets from the additional users from d.all
-temp <- d.all[d.all$screen_name %in% extra.list$screen_name, ]
-## Find one tweet per user
-temp <- subset(temp, !duplicated(screen_name)) 
-## Merge Ideology coding of extra.list (info from d.extra) and temp
-temp <- merge(temp, extra.list, by.all = "screen_name", all = T)
-## Merge as d.extra
-d.extra <-
-  merge(d.1643[,], temp, by.all = "screen_name", all = T)
-
-## Export d.extra as d.2182.csv
-write.csv (d.extra, "d.2182.csv", row.names = F, quote = T)
-
-rm(temp)
+# Exporting dataframe in .csv
+write.csv(obamacare_relabeled, file = "obamacare_relabeled.csv",
+          row.names = F)
 ```
+
