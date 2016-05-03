@@ -1,7 +1,7 @@
 ---
 title: "08 Recode Verified Users"
 author: "JungHwan Yang"
-date: "April 1, 2016"
+date: "May 3, 2016"
 output: html_document
 ---
 
@@ -22,6 +22,7 @@ d$Ideology.recode <-
           as.character(d$Ideology.recode) == ""),
          as.character(d$Ideology),
          as.character(d$Ideology.recode))
+d$Ideology <- d$Ideology.recode
 ```
 
 So, now I have recoded classification of the verified users.
@@ -59,7 +60,24 @@ Now, the new coding is merged with the old coding. Now, I collected data
 # These are the elite users who we additionally coded and that were not in the initial coding set.
 # write.csv (d.extra[1644:nrow(d.extra),1], "extraEliteUsersList.csv",
 #            row.names = F, quote = F)
-# Here I pull radom sample of their tweets from *.RData file that I made using aobamacare.json
+# Here I pull radom sample of their tweets from *.RData file that I made using obamacare sample json.json
+# library(rjson)
+# con <- file("obamacare sample json.json",open = "r")
+# obamacare<-vector("list")
+# i=0
+# while(T){
+#   i<-i+1
+#   temp<-readLines(con,1)
+#   if(length(temp)==0){
+#     print("reach the end")
+#     break
+#   } else
+#   obamacare[[i]]<-fromJSON(temp)
+# }
+# close(con)
+# 
+# rm(con); rm(i); rm(temp)
+# save(obamacare,file="../R Project/Data/obamacare.RData")
 load("~/Documents/SMAD/smad-methods/Obamacare/R Project/Data/obamacare.RData")
 
 # using 'obamacare' object, which contains raw json data, I extracted these properties:
