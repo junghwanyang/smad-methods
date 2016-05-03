@@ -71,7 +71,7 @@ Now, the new coding is merged with the old coding. Now, I collected data
 #   if(length(temp)==0){
 #     print("reach the end")
 #     break
-#   } else
+#   } else temp<-sub('.*\\t', '',temp, perl = TRUE)#get rid of the series ahead of json format
 #   obamacare[[i]]<-fromJSON(temp)
 # }
 # close(con)
