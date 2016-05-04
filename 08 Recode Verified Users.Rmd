@@ -1,7 +1,7 @@
 ---
 title: "08 Recode Verified Users"
 author: "JungHwan Yang"
-date: "May 3, 2016"
+date: "April 1, 2016"
 output: html_document
 ---
 
@@ -77,7 +77,7 @@ Now, the new coding is merged with the old coding. Now, I collected data
 # close(con)
 # 
 # rm(con); rm(i); rm(temp)
-# save(obamacare,file="../R Project/Data/obamacare.RData")
+# save(obamacare,file="obamacare.RData")
 load("~/Documents/SMAD/smad-methods/Obamacare/R Project/Data/obamacare.RData")
 
 # using 'obamacare' object, which contains raw json data, I extracted these properties:
